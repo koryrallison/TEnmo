@@ -1,0 +1,1 @@
+2022-06-14T18:29:16.270121379 500 : [{"timestamp":"2022-06-15T01:29:16.232+00:00","status":500,"error":"Internal Server Error","message":"PreparedStatementCallback; bad SQL grammar []; nested exception is org.postgresql.util.PSQLException: ERROR: relation \"users\" does not exist\n  Position: 13","path":"/register"}]

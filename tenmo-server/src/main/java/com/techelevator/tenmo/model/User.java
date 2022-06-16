@@ -1,5 +1,7 @@
 package com.techelevator.tenmo.model;
 
+import com.techelevator.tenmo.model.Authority;
+
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;

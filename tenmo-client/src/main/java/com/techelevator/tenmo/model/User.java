@@ -1,5 +1,7 @@
 package com.techelevator.tenmo.model;
 
+
+
 public class User {
 
     private Long id;

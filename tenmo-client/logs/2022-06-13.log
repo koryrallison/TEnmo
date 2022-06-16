@@ -1,0 +1,7 @@
+2022-06-13T15:35:39.835543216 500 : [{"timestamp":"2022-06-13T22:35:39.823+00:00","status":500,"error":"Internal Server Error","message":"PreparedStatementCallback; bad SQL grammar []; nested exception is org.postgresql.util.PSQLException: ERROR: relation \"users\" does not exist\n  Position: 13","path":"/register"}]
+2022-06-13T15:35:47.376747535 401 : [no body]
+2022-06-13T15:38:47.256610837 401 : [no body]
+2022-06-13T16:20:54.119563637 I/O error on POST request for "http://localhost:8080/register": Connection refused; nested exception is java.net.ConnectException: Connection refused
+2022-06-13T17:13:52.446389914 500 : [{"timestamp":"2022-06-14T00:13:52.437+00:00","status":500,"error":"Internal Server Error","message":"PreparedStatementCallback; bad SQL grammar []; nested exception is org.postgresql.util.PSQLException: ERROR: relation \"users\" does not exist\n  Position: 13","path":"/register"}]
+2022-06-13T17:15:27.079491652 500 : [{"timestamp":"2022-06-14T00:15:27.070+00:00","status":500,"error":"Internal Server Error","message":"PreparedStatementCallback; bad SQL grammar []; nested exception is org.postgresql.util.PSQLException: ERROR: relation \"users\" does not exist\n  Position: 13","path":"/register"}]
+2022-06-13T17:56:50.631963876 500 : [{"timestamp":"2022-06-14T00:56:50.610+00:00","status":500,"error":"Internal Server Error","message":"PreparedStatementCallback; bad SQL grammar []; nested exception is org.postgresql.util.PSQLException: ERROR: relation \"users\" does not exist\n  Position: 13","path":"/register"}]

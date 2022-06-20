@@ -46,6 +46,22 @@ public class ConsoleService {
         System.out.println();
     }
 
+    public void printTransferHistoryMenu() {
+        System.out.println();
+        System.out.println("1: Lookup Transfer By Id");
+        System.out.println("2: Advanced Transfer Search");
+        System.out.println("0: Exit");
+        System.out.println();
+    }
+
+    public void printPendingTransferMenu() {
+        System.out.println();
+        System.out.println("1: Approve Transfer by ID");
+        System.out.println("2: Reject Transfer by ID");
+        System.out.println("0: Exit");
+        System.out.println();
+    }
+
     public UserCredentials promptForCredentials() {
         String username = promptForString("Username: ");
         String password = promptForString("Password: ");

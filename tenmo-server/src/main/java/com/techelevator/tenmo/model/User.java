@@ -1,12 +1,14 @@
 package com.techelevator.tenmo.model;
 
+
+import javax.persistence.*;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-public class User {
 
-   private Long id;
+public class User {
+   private Long user_id;
    private String username;
    private String password;
    private boolean activated;
@@ -14,19 +16,19 @@ public class User {
 
    public User() { }
 
-   public User(Long id, String username, String password, String authorities) {
-      this.id = id;
+   public User(Long user_id, String username, String password, String authorities) {
+      this.user_id = user_id;
       this.username = username;
       this.password = password;
       this.activated = true;
    }
 
-   public Long getId() {
-      return id;
+   public Long getUser_id() {
+      return user_id;
    }
 
-   public void setId(Long id) {
-      this.id = id;
+   public void setUser_id(Long user_id) {
+      this.user_id = user_id;
    }
 
    public String getUsername() {
@@ -73,7 +75,7 @@ public class User {
       if (this == o) return true;
       if (o == null || getClass() != o.getClass()) return false;
       User user = (User) o;
-      return id == user.id &&
+      return user_id == user.user_id &&
               activated == user.activated &&
               Objects.equals(username, user.username) &&
               Objects.equals(password, user.password) &&
@@ -82,13 +84,13 @@ public class User {
 
    @Override
    public int hashCode() {
-      return Objects.hash(id, username, password, activated, authorities);
+      return Objects.hash(user_id, username, password, activated, authorities);
    }
 
    @Override
    public String toString() {
       return "User{" +
-              "id=" + id +
+              "user_id=" + user_id +
               ", username='" + username + '\'' +
               ", activated=" + activated +
               ", authorities=" + authorities +

@@ -1,0 +1,8 @@
+2022-06-20T08:33:26.83804 500 : [{"timestamp":"2022-06-20T12:33:26.773+00:00","status":500,"error":"Internal Server Error","message":"No message available","path":"/transfer/send"}]
+2022-06-20T13:01:01.755009 500 : [{"timestamp":"2022-06-20T17:01:01.630+00:00","status":500,"error":"Internal Server Error","message":"Account of User 0 was not found.","path":"/transfer/request"}]
+2022-06-20T13:23:31.190425 500 : [{"timestamp":"2022-06-20T17:23:31.123+00:00","status":500,"error":"Internal Server Error","message":"Missing URI template variable 'transferId' for method parameter of type long","path":"/transfer/3011reject"}]
+2022-06-20T13:24:00.241466 500 : [{"timestamp":"2022-06-20T17:24:00.233+00:00","status":500,"error":"Internal Server Error","message":"Missing URI template variable 'transferId' for method parameter of type long","path":"/transfer/3011approve"}]
+2022-06-20T13:37:30.764057 405 : [{"timestamp":"2022-06-20T17:37:30.651+00:00","status":405,"error":"Method Not Allowed","message":"Request method 'GET' not supported","path":"/transfer/3011/reject"}]
+2022-06-20T13:38:07.79242 405 : [{"timestamp":"2022-06-20T17:38:07.783+00:00","status":405,"error":"Method Not Allowed","message":"Request method 'GET' not supported","path":"/transfer/3011/approve"}]
+2022-06-20T13:39:43.923092 500 : [{"timestamp":"2022-06-20T17:39:43.829+00:00","status":500,"error":"Internal Server Error","message":"Missing URI template variable 'transferId' for method parameter of type long","path":"/transfer/3011/reject"}]
+2022-06-20T13:39:53.048297 500 : [{"timestamp":"2022-06-20T17:39:53.039+00:00","status":500,"error":"Internal Server Error","message":"Missing URI template variable 'transferId' for method parameter of type long","path":"/transfer/3011/approve"}]

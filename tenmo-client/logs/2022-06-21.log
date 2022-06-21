@@ -24,3 +24,4 @@
 2022-06-21T17:30:06.098232 500 : [{"timestamp":"2022-06-21T21:30:06.001+00:00","status":500,"error":"Internal Server Error","message":"PreparedStatementCallback; SQL [INSERT INTO transfer (transfer_type_id, transfer_status_id, account... (746 bytes)]
 2022-06-21T17:40:24.586511 500 : [{"timestamp":"2022-06-21T21:40:24.516+00:00","status":500,"error":"Internal Server Error","message":"PreparedStatementCallback; bad SQL grammar [SELECT transfer_id, transfer_type_id, transfer_status_i... (538 bytes)]
 2022-06-21T17:44:19.635913 401 : [no body]
+2022-06-21T18:20:26.637582 401 : [no body]

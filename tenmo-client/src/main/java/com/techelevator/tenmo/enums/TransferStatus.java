@@ -13,14 +13,16 @@ public enum TransferStatus {
     private final int status_id;
     private final String status_message;
 
-    TransferStatus(int statusId, String statusMessage){
+    TransferStatus(int statusId, String statusMessage) {
         this.status_id = statusId;
         this.status_message = statusMessage;
     }
 
     public static String getStatusById(int i) {
         for (TransferStatus status : TransferStatus.values()) {
-            if (status.getStatus_id() == i) {return status.status_message;}
+            if (status.getStatus_id() == i) {
+                return status.status_message;
+            }
         }
         return null;
     }

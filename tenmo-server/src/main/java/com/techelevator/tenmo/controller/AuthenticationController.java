@@ -68,9 +68,9 @@ public class AuthenticationController {
 
     @ResponseStatus(HttpStatus.CREATED)
     @RequestMapping(path = "/newaccount", method = RequestMethod.POST)
-    public int newAccount(@RequestBody String account_name, Principal principal) {
+    public Account newAccount(@RequestBody String account_name, Principal principal) {
         User user = userDao.findByUsername(principal.getName());
-        return accountDao.create(account_name, user.getUser_id(), JdbcUserDao.STARTING_BALANCE);
+        return accountDao.findById(accountDao.create(account_name, user.getUser_id(), JdbcUserDao.STARTING_BALANCE));
     }
 
     /**

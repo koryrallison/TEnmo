@@ -1,5 +1,6 @@
 package com.techelevator.tenmo.dao;
 
+import com.techelevator.tenmo.model.Account;
 import com.techelevator.tenmo.model.User;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.RecoverableDataAccessException;
@@ -16,7 +17,7 @@ import java.util.List;
 @Component
 public class JdbcUserDao implements UserDao {
 
-    private static final BigDecimal STARTING_BALANCE = new BigDecimal("1000.00");
+    public static final BigDecimal STARTING_BALANCE = new BigDecimal("1000.00");
     private JdbcTemplate jdbcTemplate;
 
     public JdbcUserDao(JdbcTemplate jdbcTemplate) {
@@ -43,6 +44,13 @@ public class JdbcUserDao implements UserDao {
             return mapRowToUser(rowSet);
         }
         throw new RecoverableDataAccessException("User " + userId + " was not found.");
+    }
+
+    @Override
+    public BigDecimal findUserBalance(long user_id) {
+        List<Account> accounts = new ArrayList<>();
+        String sql = "SELECT SUM(balance) FROM account WHERE user_id = ?;";
+        return jdbcTemplate.queryForObject(sql, BigDecimal.class, user_id);
     }
 
     @Override
@@ -80,7 +88,7 @@ public class JdbcUserDao implements UserDao {
     }
 
     @Override
-    public boolean create(String username, String password) {
+    public boolean create(String username, String password, String account_name) {
 
         // create user
         String sql = "INSERT INTO tenmo_user (username, password_hash) VALUES (?, ?) RETURNING user_id";
@@ -93,9 +101,9 @@ public class JdbcUserDao implements UserDao {
         }
 
         // create account
-        sql = "INSERT INTO account (user_id, balance) values(?, ?)";
+        sql = "INSERT INTO account (user_id, account_name, balance) values(?, ?, ?)";
         try {
-            jdbcTemplate.update(sql, newUserId, STARTING_BALANCE);
+            jdbcTemplate.update(sql, newUserId, account_name, STARTING_BALANCE);
         } catch (DataAccessException e) {
             return false;
         }

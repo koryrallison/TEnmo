@@ -15,9 +15,11 @@ public interface TransferDao {
 
     List<Transfer> findInboundPending(long userId);
 
-    Integer create(int transferType, int accountFrom, int accountTo, BigDecimal amount);
+    Integer create(Transfer transfer);
 
     Transfer approve(Transfer transfer);
 
-    boolean reject(Transfer transfer);
+    Transfer reject(Transfer transfer);
+
+    Transfer invalidate(Transfer transfer);
 }

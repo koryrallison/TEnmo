@@ -1,6 +1,8 @@
 package com.techelevator.tenmo.services;
 
 
+import com.techelevator.tenmo.model.Account;
+import com.techelevator.tenmo.model.RegistrationCredentials;
 import com.techelevator.tenmo.model.UserCredentials;
 
 import java.math.BigDecimal;
@@ -38,17 +40,26 @@ public class ConsoleService {
     public void printMainMenu() {
         System.out.println();
         System.out.println("1: View your current balance");
-        System.out.println("2: View your past transfers");
-        System.out.println("3: View your pending requests");
-        System.out.println("4: Send TE bucks");
-        System.out.println("5: Request TE bucks");
+        System.out.println("2: View your account list");
+        System.out.println("3: View your past transfers");
+        System.out.println("4: View your pending requests");
+        System.out.println("5: Send TE bucks");
+        System.out.println("6: Request TE bucks");
+        System.out.println("0: Log Out");
+        System.out.println();
+    }
+
+    public void printAccountMenu() {
+        System.out.println();
+        System.out.println("1: Select Active Account");
+        System.out.println("2: Create New Account");
         System.out.println("0: Exit");
         System.out.println();
     }
 
     public void printTransferHistoryMenu() {
         System.out.println();
-        System.out.println("1: Lookup Transfer By Id");
+        System.out.println("1: Lookup Transfer Details By Id");
         System.out.println("2: Advanced Transfer Search");
         System.out.println("0: Exit");
         System.out.println();
@@ -66,6 +77,13 @@ public class ConsoleService {
         String username = promptForString("Username: ");
         String password = promptForString("Password: ");
         return new UserCredentials(username, password);
+    }
+
+    public RegistrationCredentials promptForRegistration() {
+        String username = promptForString("Username: ");
+        String password = promptForString("Password: ");
+        String account_name = promptForString("Account Name: ");
+        return new RegistrationCredentials(username, password, account_name);
     }
 
     public String promptForString(String prompt) {
@@ -88,7 +106,12 @@ public class ConsoleService {
         System.out.print(prompt);
         while (true) {
             try {
-                return new BigDecimal(scanner.nextLine());
+                BigDecimal input = new BigDecimal(scanner.nextLine());
+                if (input.scale() > 2) {
+                    throw new NumberFormatException("Please enter a number with no more than 2 digits after the decimal");
+                } else {
+                    return input;
+                }
             } catch (NumberFormatException e) {
                 System.out.println("Please enter a decimal number.");
             }

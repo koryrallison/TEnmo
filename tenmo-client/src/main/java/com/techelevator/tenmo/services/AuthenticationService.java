@@ -1,5 +1,7 @@
 package com.techelevator.tenmo.services;
 
+import com.techelevator.tenmo.model.Account;
+import com.techelevator.tenmo.model.RegistrationCredentials;
 import com.techelevator.util.BasicLogger;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -13,13 +15,16 @@ import org.springframework.web.client.RestTemplate;
 import com.techelevator.tenmo.model.AuthenticatedUser;
 import com.techelevator.tenmo.model.UserCredentials;
 
+import java.math.BigDecimal;
+
 public class AuthenticationService {
 
-    private final String baseUrl;
+    private final String API_BASE_URL;
     private final RestTemplate restTemplate = new RestTemplate();
 
+
     public AuthenticationService(String url) {
-        this.baseUrl = url;
+        this.API_BASE_URL = url;
     }
 
     public AuthenticatedUser login(UserCredentials credentials) {
@@ -27,7 +32,7 @@ public class AuthenticationService {
         AuthenticatedUser user = null;
         try {
             ResponseEntity<AuthenticatedUser> response =
-                    restTemplate.exchange(baseUrl + "login", HttpMethod.POST, entity, AuthenticatedUser.class);
+                    restTemplate.exchange(API_BASE_URL + "login", HttpMethod.POST, entity, AuthenticatedUser.class);
             user = response.getBody();
         } catch (RestClientResponseException | ResourceAccessException e) {
             BasicLogger.log(e.getMessage());
@@ -35,11 +40,11 @@ public class AuthenticationService {
         return user;
     }
 
-    public boolean register(UserCredentials credentials) {
-        HttpEntity<UserCredentials> entity = createCredentialsEntity(credentials);
+    public boolean register(RegistrationCredentials credentials) {
+        HttpEntity<RegistrationCredentials> entity = createRegistrationEntity(credentials);
         boolean success = false;
         try {
-            restTemplate.exchange(baseUrl + "register", HttpMethod.POST, entity, Void.class);
+            restTemplate.exchange(API_BASE_URL + "register", HttpMethod.POST, entity, Void.class);
             success = true;
         } catch (RestClientResponseException | ResourceAccessException e) {
             BasicLogger.log(e.getMessage());
@@ -48,6 +53,12 @@ public class AuthenticationService {
     }
 
     private HttpEntity<UserCredentials> createCredentialsEntity(UserCredentials credentials) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return new HttpEntity<>(credentials, headers);
+    }
+
+    private HttpEntity<RegistrationCredentials> createRegistrationEntity(RegistrationCredentials credentials) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         return new HttpEntity<>(credentials, headers);

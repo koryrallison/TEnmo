@@ -1,9 +1,8 @@
 package com.techelevator.tenmo;
 
-import com.techelevator.tenmo.model.AuthenticatedUser;
-import com.techelevator.tenmo.model.Transfer;
-import com.techelevator.tenmo.model.User;
-import com.techelevator.tenmo.model.UserCredentials;
+import com.techelevator.tenmo.enums.TransferStatus;
+import com.techelevator.tenmo.enums.TransferType;
+import com.techelevator.tenmo.model.*;
 import com.techelevator.tenmo.services.AuthenticationService;
 import com.techelevator.tenmo.services.ConsoleService;
 import com.techelevator.tenmo.services.TransactionService;
@@ -19,6 +18,7 @@ public class App {
     private final AuthenticationService authenticationService = new AuthenticationService(API_BASE_URL);
 
     private AuthenticatedUser currentUser;
+    private Account activeAccount;
 
     public static void main(String[] args) {
         App app = new App();
@@ -28,19 +28,22 @@ public class App {
     private void run() {
         consoleService.printGreeting();
         loginMenu();
-        if (currentUser != null) {
-            mainMenu();
-        }
     }
     private void loginMenu() {
         int menuSelection = -1;
-        while (menuSelection != 0 && currentUser == null) {
+        while (menuSelection != 0) {
             consoleService.printLoginMenu();
             menuSelection = consoleService.promptForMenuSelection("Please choose an option: ");
             if (menuSelection == 1) {
-                handleRegister();
+                handleUserRegister();
             } else if (menuSelection == 2) {
                 handleLogin();
+                accountLoginMenu();
+                if (currentUser != null && activeAccount != null) {
+                    mainMenu();
+                } else {
+                    handleLogout();
+                }
             } else if (menuSelection != 0) {
                 System.out.println("Invalid Selection");
                 consoleService.pause();
@@ -48,9 +51,9 @@ public class App {
         }
     }
 
-    private void handleRegister() {
-        System.out.println("Please register a new user account");
-        UserCredentials credentials = consoleService.promptForCredentials();
+    private void handleUserRegister() {
+        System.out.println("Please register a new user login and name your first account");
+        RegistrationCredentials credentials = consoleService.promptForRegistration();
         if (authenticationService.register(credentials)) {
             System.out.println("Registration successful. You can now login.");
         } else {
@@ -67,21 +70,54 @@ public class App {
         }
     }
 
-    private void mainMenu() {
+    private void handleLogout() {
+        currentUser = null;
+        activeAccount = null;
+        transactionService.setAuthToken(null);
+        transactionService.setActiveAccountId(null);
+    }
+
+    private void handleAccountRegister(){
+        String accountName = consoleService.promptForString("Please enter a name for the account: ");
+        Account newAccount = transactionService.newAccount(accountName);
+        if (newAccount != null) {
+            System.out.println("Registration successful. You've opened a new account.");
+        } else {
+            consoleService.printErrorMessage();
+        }
+    }
+
+    private void accountLoginMenu() {
+        System.out.println("-------------------------------");
+        System.out.println("           Accounts            ");
+        System.out.println("-------------------------------");
+        for (Account account : transactionService.getCurrentUserAccounts()) {
+            System.out.println("Account ID: " + account.getAccount_id() +
+                    "     Account Name: " + account.getAccount_name() +
+                    "     Balance: " + account.getBalance());
+        }
+        accountSelectMenu();
+    }
+
+    private void accountListMenu(){
+        System.out.println("-------------------------------");
+        System.out.println("           Accounts            ");
+        System.out.println("-------------------------------");
+        for (Account account : transactionService.getCurrentUserAccounts()) {
+            System.out.println("Account ID: " + account.getAccount_id() +
+                    "     Account Name: " + account.getAccount_name() +
+                    "     Balance: " + account.getBalance());
+        }
+        if (activeAccount != null) {System.out.println("Active Account: " + activeAccount.getAccount_name());}
         int menuSelection = -1;
         while (menuSelection != 0) {
-            consoleService.printMainMenu();
+            consoleService.printAccountMenu();
             menuSelection = consoleService.promptForMenuSelection("Please choose an option: ");
             if (menuSelection == 1) {
-                viewCurrentBalance();
+                accountSelectMenu();
+                break;
             } else if (menuSelection == 2) {
-                viewTransferHistory();
-            } else if (menuSelection == 3) {
-                viewPendingRequests();
-            } else if (menuSelection == 4) {
-                sendBucks();
-            } else if (menuSelection == 5) {
-                requestBucks();
+                handleAccountRegister();
             } else if (menuSelection == 0) {
                 continue;
             } else {
@@ -91,8 +127,55 @@ public class App {
         }
     }
 
+    private void accountSelectMenu(){
+        int accountSelection = -1;
+        while (accountSelection != 0) {
+            accountSelection = consoleService.promptForInt("Please enter an Account ID from the list above (or 0 to Exit): ");
+            if (accountSelection >= 1) {
+                    activeAccount = transactionService.verifyAccountId(accountSelection);
+                    transactionService.setActiveAccountId(activeAccount.getAccount_id());
+                    if (activeAccount == null) {
+                        consoleService.printErrorMessage();
+                    }
+                    else break;
+            } else if (accountSelection == 0) {
+                continue;
+            } else {
+                System.out.println("Invalid Selection");
+                consoleService.pause();
+            }
+        }
+    }
+
+    private void mainMenu() {
+        int menuSelection = -1;
+        while (true) {
+            consoleService.printMainMenu();
+            menuSelection = consoleService.promptForMenuSelection("Please choose an option: ");
+            if (menuSelection == 1) {
+                viewCurrentBalance();
+            } else if (menuSelection == 2) {
+                accountListMenu();
+            } else if (menuSelection == 3) {
+                viewTransferHistory();
+            } else if (menuSelection == 4) {
+                viewPendingRequests();
+            } else if (menuSelection == 5) {
+                sendBucks();
+            } else if (menuSelection == 6) {
+                requestBucks();
+            } else if (menuSelection == 0) {
+                handleLogout();
+                break;
+            } else {
+                System.out.println("Invalid Selection");
+                consoleService.pause();
+            }
+        }
+    }
+
 	private void viewCurrentBalance() {
-        System.out.println("Your current account balance is: $" + transactionService.getAccountBalance());
+        System.out.println("Your current total balance accross all accounts is: $" + transactionService.getUserBalance());
 	}
 
 	private void viewTransferHistory() {
@@ -102,16 +185,14 @@ public class App {
         System.out.println("-------------------------------");
 
         for (Transfer transfer : transactionService.getTransferHistory()) {
-            if (transfer.getTransferType() == 1) {
-                System.out.println("Transfer ID: " + transfer.getTransfer_id()
-                        + "   From: " + transactionService.getUsernameFromAccountId(transfer.getAccount_from())
-                        + "     $" + transfer.getAmount());
-            } else if (transfer.getTransferType() == 2) {
+            if (transfer.getAccount_from() == activeAccount.getAccount_id()) {
                 System.out.println("Transfer ID: " + transfer.getTransfer_id()
                         + "     To: " + transactionService.getUsernameFromAccountId(transfer.getAccount_to())
                         + "     $" + transfer.getAmount());
-            } else {
-                System.err.println("Error: Unknown TransferType Detected in Transfer ID: " + transfer.getTransfer_id());
+            } else if (transfer.getAccount_to() == activeAccount.getAccount_id()) {
+                System.out.println("Transfer ID: " + transfer.getTransfer_id()
+                        + "     From: " + transactionService.getUsernameFromAccountId(transfer.getAccount_from())
+                        + "       $" + transfer.getAmount());
             }
         }
         int menuSelection = -1;
@@ -139,7 +220,7 @@ public class App {
 
             for (Transfer transfer : transactionService.getPendingTransfers()) {
                 System.out.println("Transfer ID: " + transfer.getTransfer_id()
-                        + "     To: " + transactionService.getUsernameFromAccountId(transfer.getAccount_to())
+                        + "     Request From: " + transactionService.getUsernameFromAccountId(transfer.getAccount_to())
                         + "     $" + transfer.getAmount());
             }
         int menuSelection = -1;
@@ -169,11 +250,12 @@ public class App {
                 System.out.println("Transfer Details");
                 System.out.println("-------------------------------");
                 System.out.println("Id: " + transfer.getTransfer_id());
-                System.out.println("From: " + transfer.getAccount_from());
-                System.out.println("To: " + transfer.getAccount_to());
-                System.out.println("Type: " + transfer.getTransferType());
-                System.out.println("Status: " + transfer.getTransferStatus());
+                System.out.println("From: " + transactionService.getUsernameFromAccountId(transfer.getAccount_from()) + " (" + transactionService.getAccountNameFromAccountId(transfer.getAccount_from()) + ")");
+                System.out.println("To: " + transactionService.getUsernameFromAccountId(transfer.getAccount_to()) + " (" + transactionService.getAccountNameFromAccountId(transfer.getAccount_to()) + ")");
+                System.out.println("Type: " + TransferType.getTypeById(transfer.getTransferType()));
+                System.out.println("Status: " + TransferStatus.getStatusById(transfer.getTransferStatus()));
                 System.out.println("Amount: $" + transfer.getAmount());
+                break;
             } else if (transferSelection == 0) {
                 continue;
             } else {
@@ -189,6 +271,7 @@ public class App {
             transferSelection = consoleService.promptForInt("Please enter a Transfer ID from the list above (or 0 to Exit): ");
             if (transferSelection >= 1) {
                 transactionService.approveTransfer(transferSelection);
+                System.out.println("Transaction " + transferSelection + " Approved!");
             } else if (transferSelection == 0) {
                 continue;
             } else {
@@ -204,6 +287,7 @@ public class App {
             transferSelection = consoleService.promptForInt("Please enter a Transfer ID from the list above (or 0 to Exit): ");
             if (transferSelection >= 1) {
                 transactionService.rejectTransfer(transferSelection);
+                System.out.println("Transaction " + transferSelection + " Rejected!");
             } else if (transferSelection == 0) {
                 continue;
             } else {
@@ -225,11 +309,21 @@ public class App {
         while (userSelection != 0) {
             userSelection = consoleService.promptForInt("Please enter a User ID from the list above to send money to (or 0 to Exit): ");
             if (userSelection >= 1) {
+                System.out.println("-------------------------------");
+                System.out.println("           Accounts            ");
+                System.out.println("-------------------------------");
+                for (Account account : transactionService.getAccountsByUserId(userSelection)) {
+                    System.out.println("Account ID: " + account.getAccount_id() +
+                            "     Account Name: " + account.getAccount_name());
+                }
+                int accountSelection = consoleService.promptForInt("Please enter an Account ID from the list above (or 0 to Exit): ");
                 BigDecimal amount = consoleService.promptForBigDecimal("Please enter an amount of money to send to " + transactionService.getUsernameFromUserId(userSelection) + ": ");
                 Transfer transfer = new Transfer();
-                transfer.setAccount_to(userSelection);
+                transfer.setAccount_from(activeAccount.getAccount_id());
+                transfer.setAccount_to(accountSelection);
                 transfer.setAmount(amount);
                 transactionService.createOutboundTransfer(transfer);
+                break;
             } else if (userSelection == 0) {
                 continue;
             } else {
@@ -251,11 +345,20 @@ public class App {
         while (userSelection != 0) {
             userSelection = consoleService.promptForInt("Please enter a User ID from the list above to request money from (or 0 to Exit): ");
             if (userSelection >= 1) {
+                System.out.println("-------------------------------");
+                System.out.println("           Accounts            ");
+                System.out.println("-------------------------------");
+                for (Account account : transactionService.getAccountsByUserId(userSelection)) {
+                    System.out.println("Account ID: " + account.getAccount_id() +
+                            "     Account Name: " + account.getAccount_name());
+                }
+                int accountSelection = consoleService.promptForInt("Please enter an Account ID from the list above (or 0 to Exit): ");
                 BigDecimal amount = consoleService.promptForBigDecimal("Please enter an amount of money to request from " + transactionService.getUsernameFromUserId(userSelection) + ": ");
                 Transfer transfer = new Transfer();
-                transfer.setAccount_from(userSelection);
+                transfer.setAccount_from(accountSelection);
                 transfer.setAmount(amount);
                 transactionService.createTransferRequest(transfer);
+                break;
             } else if (userSelection == 0) {
                 continue;
             } else {
@@ -264,5 +367,4 @@ public class App {
             }
         }
 	}
-
 }

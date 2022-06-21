@@ -6,13 +6,13 @@ import java.math.BigDecimal;
 import java.util.List;
 
 public interface AccountDao {
-    Account findById(long accountId);
+    Account findById(long account_id);
 
     List<Account> findAll();
 
-    Account findByUserId(long userId);
+    List<Account> findByUserId(long user_id);
 
-    boolean create(long accountId, long userId, BigDecimal balance);
+    int create(String account_name, long user_id, BigDecimal balance);
 
     boolean update(Account account);
 }

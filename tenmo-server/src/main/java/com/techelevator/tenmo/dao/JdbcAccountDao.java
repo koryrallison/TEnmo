@@ -9,7 +9,6 @@ import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,13 +23,13 @@ public class JdbcAccountDao implements AccountDao{
     }
 
     @Override
-    public Account findById(long accountId) {
-        String sql = "SELECT account_id, user_id, balance FROM account WHERE account_id = ?;";
-        SqlRowSet rowSet = jdbcTemplate.queryForRowSet(sql, accountId);
+    public Account findById(long account_id) {
+        String sql = "SELECT account_id, account_name, user_id, balance FROM account WHERE account_id = ?;";
+        SqlRowSet rowSet = jdbcTemplate.queryForRowSet(sql, account_id);
         if (rowSet.next()){
             return mapRowToAccount(rowSet);
         }
-        throw new RecoverableDataAccessException("Account " + accountId + " was not found.");
+        throw new RecoverableDataAccessException("Account " + account_id + " was not found.");
     }
 
     @Override
@@ -46,34 +45,36 @@ public class JdbcAccountDao implements AccountDao{
     }
 
     @Override
-    public Account findByUserId(long userId) {
-        String sql = "SELECT account_id, user_id, balance FROM account WHERE user_id = ?;";
-        SqlRowSet rowSet = jdbcTemplate.queryForRowSet(sql, userId);
-        if (rowSet.next()){
-            return mapRowToAccount(rowSet);
+    public List<Account> findByUserId(long user_id) {
+        List<Account> accounts = new ArrayList<>();
+        String sql = "SELECT account_id, account_name, user_id, balance FROM account WHERE user_id = ?;";
+        SqlRowSet results = jdbcTemplate.queryForRowSet(sql, user_id);
+        while(results.next()) {
+            Account account = mapRowToAccount(results);
+            accounts.add(account);
         }
-        throw new RecoverableDataAccessException("Account of User " + userId + " was not found.");
+        return accounts;
     }
 
     @Override
-    public boolean create(long accountId, long userId, BigDecimal balance) {
-        String sql = "INSERT INTO account (account_id, user_id, balance) " +
+    public int create(String account_name, long user_id, BigDecimal balance) {
+        String sql = "INSERT INTO account (account_name, user_id, balance) " +
                 "VALUES (?, ?, ?) RETURNING account_id;";
         Integer newAccountId;
         try {
-            newAccountId = jdbcTemplate.queryForObject(sql, Integer.class, accountId, userId, balance);
+            newAccountId = jdbcTemplate.queryForObject(sql, Integer.class, account_name, user_id, balance);
         } catch (DataAccessException e) {
-            return false;
+            return -1;
         }
-        return true;
+        return newAccountId;
     }
 
     @Override
     public boolean update(Account account) {
-        String sql = "UPDATE account SET account_id = ?, user_id = ?, balance = ?) " +
+        String sql = "UPDATE account SET account_name = ?, user_id = ?, balance = ?) " +
                 "WHERE account_id = ?";
         try {
-            jdbcTemplate.update(sql, account.getAccount_id(), account.getUserId(), account.getBalance());
+            jdbcTemplate.update(sql, account.getAccount_name(), account.getUser_id(), account.getBalance(), account.getAccount_id());
         } catch (DataAccessException e) {
             return false;
         }
@@ -83,7 +84,8 @@ public class JdbcAccountDao implements AccountDao{
     private Account mapRowToAccount(SqlRowSet rs){
         Account account = new Account();
         account.setAccount_id(rs.getInt("account_id"));
-        account.setUserId(rs.getInt("user_id"));
+        account.setAccount_name(rs.getString("account_name"));
+        account.setUser_id(rs.getInt("user_id"));
         account.setBalance(rs.getBigDecimal("balance"));
         return account;
     }

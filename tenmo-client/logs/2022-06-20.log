@@ -6,3 +6,5 @@
 2022-06-20T13:38:07.79242 405 : [{"timestamp":"2022-06-20T17:38:07.783+00:00","status":405,"error":"Method Not Allowed","message":"Request method 'GET' not supported","path":"/transfer/3011/approve"}]
 2022-06-20T13:39:43.923092 500 : [{"timestamp":"2022-06-20T17:39:43.829+00:00","status":500,"error":"Internal Server Error","message":"Missing URI template variable 'transferId' for method parameter of type long","path":"/transfer/3011/reject"}]
 2022-06-20T13:39:53.048297 500 : [{"timestamp":"2022-06-20T17:39:53.039+00:00","status":500,"error":"Internal Server Error","message":"Missing URI template variable 'transferId' for method parameter of type long","path":"/transfer/3011/approve"}]
+2022-06-20T21:44:32.8075 500 : [{"timestamp":"2022-06-21T01:44:32.733+00:00","status":500,"error":"Internal Server Error","message":"Missing URI template variable 'transferId' for method parameter of type long","path":"/transfer/3012"}]
+2022-06-20T21:46:04.240817 500 : [{"timestamp":"2022-06-21T01:46:04.155+00:00","status":500,"error":"Internal Server Error","message":"Transfer -1 was not found.","path":"/transfer/request"}]

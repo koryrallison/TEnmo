@@ -1,5 +1,6 @@
 package com.techelevator.tenmo.services;
 
+import com.techelevator.tenmo.model.Account;
 import com.techelevator.tenmo.model.Transfer;
 import com.techelevator.tenmo.model.User;
 import com.techelevator.util.BasicLogger;
@@ -12,38 +13,85 @@ import java.math.BigDecimal;
 
 public class TransactionService {
 
-    public static final int PENDING_STATUS_ID = 1;
-    public static final int APPROVED_STATUS_ID = 2;
-    public static final int REJECTED_STATUS_ID = 3;
-    public static final int INBOUND_TYPE_ID = 1;
-    public static final int OUTBOUND_TYPE_ID = 2;
-
     public static final String API_BASE_URL = "http://localhost:8080/";
     private RestTemplate restTemplate = new RestTemplate();
 
     private String authToken = null;
+    private Integer activeAccountId;
 
     public void setAuthToken(String authToken) {
         this.authToken = authToken;
     }
+    public void setActiveAccountId(Integer activeAccountId) {
+        this.activeAccountId = activeAccountId;
+    }
+    public Integer getActiveAccountId(){return activeAccountId;}
 
-    public Long getCurrentUserAccountId() {
-        Long accountId = null;
+
+    public Account[] getCurrentUserAccounts() {
+        Account[] accounts = null;
         try {
-            ResponseEntity<Long> response =
-                    restTemplate.exchange(API_BASE_URL + "myaccount", HttpMethod.GET, makeAuthEntity(), Long.class);
-            accountId = response.getBody();
+            ResponseEntity<Account[]> response =
+                    restTemplate.exchange(API_BASE_URL + "myaccounts", HttpMethod.GET, makeAuthEntity(), Account[].class);
+            accounts = response.getBody();
         } catch (RestClientResponseException | ResourceAccessException e) {
             BasicLogger.log(e.getMessage());
         }
-        return accountId;
+        return accounts;
+    }
+
+    public Account verifyAccountId(int accountId) {
+        Account verifiedAccount = null;
+        try {
+            ResponseEntity<Account> response =
+                    restTemplate.exchange(API_BASE_URL + "changeaccount/" + accountId, HttpMethod.GET, makeAuthEntity(), Account.class);
+            verifiedAccount = response.getBody();
+        } catch (RestClientResponseException | ResourceAccessException e) {
+            BasicLogger.log(e.getMessage());
+        }
+        return verifiedAccount;
+    }
+
+    public Account newAccount(String accountName) {
+        Account account = null;
+        try {
+            ResponseEntity<Account> response = restTemplate.exchange(API_BASE_URL + "newaccount", HttpMethod.POST, makeStringEntity(accountName), Account.class);
+            account = response.getBody();
+        } catch (RestClientResponseException | ResourceAccessException e) {
+            BasicLogger.log(e.getMessage());
+        }
+        return account;
+    }
+
+    public BigDecimal getUserBalance() {
+        BigDecimal balance = null;
+        try {
+            ResponseEntity<BigDecimal> response =
+                    restTemplate.exchange(API_BASE_URL + "balance", HttpMethod.GET, makeAuthEntity(), BigDecimal.class);
+            balance = response.getBody();
+        } catch (RestClientResponseException | ResourceAccessException e) {
+            BasicLogger.log(e.getMessage());
+        }
+        return balance;
     }
 
     public String getUsernameFromAccountId(long accountId) {
         String username = null;
         try {
             ResponseEntity<String> response =
-                    restTemplate.exchange(API_BASE_URL + "account/" + accountId, HttpMethod.GET, makeAuthEntity(), String.class);
+                    restTemplate.exchange(API_BASE_URL + "account/" + accountId + "/username", HttpMethod.GET, makeAuthEntity(), String.class);
+            username = response.getBody();
+        } catch (RestClientResponseException | ResourceAccessException e) {
+            BasicLogger.log(e.getMessage());
+        }
+        return username;
+    }
+
+    public String getAccountNameFromAccountId(long accountId) {
+        String username = null;
+        try {
+            ResponseEntity<String> response =
+                    restTemplate.exchange(API_BASE_URL + "account/" + accountId + "/accountname", HttpMethod.GET, makeAuthEntity(), String.class);
             username = response.getBody();
         } catch (RestClientResponseException | ResourceAccessException e) {
             BasicLogger.log(e.getMessage());
@@ -55,7 +103,7 @@ public class TransactionService {
         String username = null;
         try {
             ResponseEntity<String> response =
-                    restTemplate.exchange(API_BASE_URL + "user/" + userId, HttpMethod.GET, makeLongEntity(userId), String.class);
+                    restTemplate.exchange(API_BASE_URL + "user/" + userId, HttpMethod.GET, makeAuthEntity(), String.class);
             username = response.getBody();
         } catch (RestClientResponseException | ResourceAccessException e) {
             BasicLogger.log(e.getMessage());
@@ -63,16 +111,16 @@ public class TransactionService {
         return username;
     }
 
-    public BigDecimal getAccountBalance() {
-        BigDecimal balance = null;
+    public Account[] getAccountsByUserId(long userId) {
+        Account[] accounts = null;
         try {
-            ResponseEntity<BigDecimal> response =
-                    restTemplate.exchange(API_BASE_URL + "balance", HttpMethod.GET, makeAuthEntity(), BigDecimal.class);
-            balance = response.getBody();
+            ResponseEntity<Account[]> response =
+                    restTemplate.exchange(API_BASE_URL + "user/" + userId + "/accounts", HttpMethod.GET, makeAuthEntity(), Account[].class);
+            accounts = response.getBody();
         } catch (RestClientResponseException | ResourceAccessException e) {
             BasicLogger.log(e.getMessage());
         }
-        return balance;
+        return accounts;
     }
 
     public Transfer[] getTransferHistory() {
@@ -145,34 +193,33 @@ public class TransactionService {
         return returnedTransfer;
     }
 
-    public Boolean approveTransfer(long transferId){
-        Boolean approvalSucceeded = false;
+    public void approveTransfer(long transferId){
+        Transfer approvalSucceeded = null;
         try {
-            ResponseEntity<Boolean> response =
-                    restTemplate.exchange(API_BASE_URL + "transfer/" + transferId + "/approve", HttpMethod.PUT, makeAuthEntity(), Boolean.class);
+            ResponseEntity<Transfer> response =
+                    restTemplate.exchange(API_BASE_URL + "transfer/" + transferId + "/approve", HttpMethod.PUT, makeAuthEntity(), Transfer.class);
             approvalSucceeded = response.getBody();
         } catch (RestClientResponseException | ResourceAccessException e) {
             BasicLogger.log(e.getMessage());
         }
-        return approvalSucceeded;
     }
 
-    public Boolean rejectTransfer(long transferId){
-        Boolean rejectionSucceeded = false;
+    public void rejectTransfer(long transferId){
+        Transfer rejectionSucceeded = null;
         try {
-            ResponseEntity<Boolean> response =
-                    restTemplate.exchange(API_BASE_URL + "transfer/" + transferId + "/reject", HttpMethod.PUT, makeAuthEntity(), Boolean.class);
+            ResponseEntity<Transfer> response =
+                    restTemplate.exchange(API_BASE_URL + "transfer/" + transferId + "/reject", HttpMethod.PUT, makeAuthEntity(), Transfer.class);
             rejectionSucceeded = response.getBody();
         } catch (RestClientResponseException | ResourceAccessException e) {
             BasicLogger.log(e.getMessage());
         }
-        return rejectionSucceeded;
     }
 
     private HttpEntity<Transfer> makeTransferEntity(Transfer transfer) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(authToken);
+        headers.add("current-account", String.valueOf(activeAccountId));
         return new HttpEntity<>(transfer, headers);
     }
 
@@ -180,19 +227,14 @@ public class TransactionService {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(authToken);
+        headers.add("current-account", String.valueOf(activeAccountId));
         return new HttpEntity<>(string, headers);
-    }
-
-    private HttpEntity<Long> makeLongEntity(long number) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(authToken);
-        return new HttpEntity<>(number, headers);
     }
 
     private HttpEntity<Void> makeAuthEntity() {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(authToken);
+        headers.add("current-account", String.valueOf(activeAccountId));
         return new HttpEntity<>(headers);
     }
 }

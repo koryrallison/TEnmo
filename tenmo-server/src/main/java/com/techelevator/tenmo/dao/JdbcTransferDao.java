@@ -11,7 +11,6 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,8 +20,12 @@ public class JdbcTransferDao implements TransferDao {
     public static final int PENDING_STATUS_ID = 1;
     public static final int APPROVED_STATUS_ID = 2;
     public static final int REJECTED_STATUS_ID = 3;
-    public static final int INBOUND_TYPE_ID = 1;
-    public static final int OUTBOUND_TYPE_ID = 2;
+    public static final int INVALID_STATUS_ID = 4;
+    public static final int COMPLETED_STATUS_ID = 5;
+    public static final int FAILED_STATUS_ID = 6;
+
+    public static final int REQUEST_TYPE_ID = 1;
+    public static final int SEND_TYPE_ID = 2;
 
     private JdbcTemplate jdbcTemplate;
     private TransactionTemplate transactionTemplate;
@@ -60,9 +63,10 @@ public class JdbcTransferDao implements TransferDao {
     public List<Transfer> findByUser(long userId) {
         List<Transfer> transfers = new ArrayList<>();
         String sql = "SELECT transfer_id, transfer_type_id, transfer_status_id, account_from, account_to, amount FROM transfer " +
-                "WHERE (account_to = (SELECT account_id FROM account WHERE user_id = ?) OR " +
-                "account_from = (SELECT account_id FROM account WHERE user_id = ?));";
-        SqlRowSet results = jdbcTemplate.queryForRowSet(sql, userId, userId);
+                "WHERE transfer_status_id = ?" +
+                "AND ((account_to IN (SELECT account_id FROM account WHERE user_id = ?) OR " +
+                "account_from IN (SELECT account_id FROM account WHERE user_id = ?)));";
+        SqlRowSet results = jdbcTemplate.queryForRowSet(sql, APPROVED_STATUS_ID, userId, userId);
         while(results.next()) {
             Transfer transfer = mapRowToTransfer(results);
             transfers.add(transfer);
@@ -76,7 +80,7 @@ public class JdbcTransferDao implements TransferDao {
         String sql = "SELECT transfer_id, transfer_type_id, transfer_status_id, account_from, account_to, amount FROM transfer " +
                 "WHERE account_from = (SELECT account_id FROM account WHERE user_id = ?) " +
                 "AND transfer_status_id = ? AND transfer_type_id = ?;";
-        SqlRowSet results = jdbcTemplate.queryForRowSet(sql, userId, PENDING_STATUS_ID, INBOUND_TYPE_ID);
+        SqlRowSet results = jdbcTemplate.queryForRowSet(sql, userId, PENDING_STATUS_ID, REQUEST_TYPE_ID);
         while(results.next()) {
             Transfer transfer = mapRowToTransfer(results);
             transfers.add(transfer);
@@ -85,12 +89,14 @@ public class JdbcTransferDao implements TransferDao {
     }
 
     @Override
-    public Integer create(int transferType, int accountFrom, int accountTo, BigDecimal amount) {
+    public Integer create(Transfer transfer) {
         String sql = "INSERT INTO transfer (transfer_type_id, transfer_status_id, account_from, account_to, amount) " +
                 "VALUES (?, ?, ?, ?, ?) RETURNING transfer_id;";
-        int newTransferId;
+        Integer newTransferId;
         try {
-            newTransferId = jdbcTemplate.queryForObject(sql, Integer.class, transferType, PENDING_STATUS_ID, accountFrom, accountTo, amount);
+            newTransferId = jdbcTemplate.queryForObject(sql, Integer.class, transfer.getTransferType(),
+                    transfer.getTransferStatus(), transfer.getAccount_from(), transfer.getAccount_to(), 
+                    transfer.getAmount());
         } catch (DataAccessException e) {
             return -1;
         }
@@ -103,7 +109,7 @@ public class JdbcTransferDao implements TransferDao {
         String withdrawFromSenderSql = "UPDATE account SET balance = (balance - ?) WHERE account_id = ?";
         String depositToRecipientSql = "UPDATE account SET balance = (balance + ?) WHERE account_id = ?";
         String updateTransferHolderSql = "SELECT transfer_id, transfer_type_id, transfer_status_id, account_from, account_to, amount FROM transfer WHERE transfer_id = ?;";
-            return transactionTemplate.execute(new TransactionCallback<Transfer>() {
+            return transactionTemplate.execute(new TransactionCallback<>() {
                 @Override
                 public Transfer doInTransaction(TransactionStatus ts) {
                     Transfer transferHolder = transfer;
@@ -121,15 +127,27 @@ public class JdbcTransferDao implements TransferDao {
     }
 
     @Override
-    public boolean reject(Transfer transfer) {
+    public Transfer reject(Transfer transfer) {
+        Transfer transferHolder = transfer;
         String sql ="UPDATE transfer SET transfer_status_id = ? WHERE transfer_id = ?";
-        Integer newTransferId;
         try {
-            jdbcTemplate.update(sql, REJECTED_STATUS_ID, transfer.getTransfer_id());
+            transferHolder = jdbcTemplate.queryForObject(sql, Transfer.class, REJECTED_STATUS_ID, transfer.getTransfer_id());
         } catch (DataAccessException e) {
-            return false;
+            System.err.println(e.getMessage());
         }
-        return true;
+        return transferHolder;
+    }
+
+    @Override
+    public Transfer invalidate(Transfer transfer) {
+        Transfer transferHolder = transfer;
+        String sql ="UPDATE transfer SET transfer_status_id = ? WHERE transfer_id = ?";
+        try {
+            transferHolder = jdbcTemplate.queryForObject(sql, Transfer.class, INVALID_STATUS_ID, transfer.getTransfer_id());
+        } catch (DataAccessException e) {
+            System.err.println(e.getMessage());
+        }
+        return transferHolder;
     }
 
     private Transfer mapRowToTransfer(SqlRowSet rs) {
